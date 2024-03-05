@@ -33,13 +33,29 @@ func main() {
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"templates/layout.html",
-		"templates/navbar.html",
-		"templates/index.html"}
-	templates := template.Must(template.ParseFiles(files...))
-	threads, err := data.Threads()
+	thread, err := data.Threads()
 	if err == nil {
+		_, err := session(w, r)
+
+		public_temp_file := []string{
+			"templates/layout.html",
+			"templates/navbar.html",
+			"templates/index.html",
+		}
+
+		private_temp_file := []string{
+			"templates/layout.html",
+			"templates/navbar.html",
+			"templates/index.html",
+		}
+
+		var templates *template.Template
+		if err != nil {
+			templates = template.Must(templates.ParseFiles(private_temp_file...))
+		} else {
+			templates = template.Must(template.ParseFiles(public_temp_file...))
+		}
+
 		templates.ExecuteTemplate(w, "layout", threads)
 	}
 }
