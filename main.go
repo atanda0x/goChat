@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 )
@@ -32,30 +33,25 @@ func main() {
 	server.ListenAndServe()
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	thread, err := data.Threads()
+func index(writer http.ResponseWriter, request *http.Request) {
+	threads, err := data.Threads()
 	if err == nil {
-		_, err := session(w, r)
-
-		public_temp_file := []string{
-			"templates/layout.html",
-			"templates/navbar.html",
-			"templates/index.html",
-		}
-
-		private_temp_file := []string{
-			"templates/layout.html",
-			"templates/navbar.html",
-			"templates/index.html",
-		}
-
-		var templates *template.Template
+		_, err := session(writer, request)
 		if err != nil {
-			templates = template.Must(templates.ParseFiles(private_temp_file...))
+			generateHTML(writer, threads, "layout", "public.navbar", "index")
 		} else {
-			templates = template.Must(template.ParseFiles(public_temp_file...))
+			generateHTML(writer, threads, "layout", "private.navbar", "index")
 		}
-
-		templates.ExecuteTemplate(w, "layout", threads)
 	}
+}
+
+func generateHTML(w http.ResponseWriter, data interface{}, fn ...string) {
+	var files []string
+
+	for _, file := range fn {
+		files = append(files, fmt.Sprintf("templates/%s.html", file))
+
+	}
+	template := template.Must(template.ParseFiles(files...))
+	template.ExecuteTemplate(w, "layout", data)
 }
